@@ -1,0 +1,58 @@
+[
+  {
+    "id": "INC-01",
+    "origen": "campo",
+    "tipo": "un_carril",
+    "severidad": "naranja",
+    "lat": 11.225287,
+    "lng": -74.190323,
+    "via": "Calle 29H3 – Camino de Venida (INC-01)",
+    "sentido_afectado": "Venida hacia Av. Ferrocarril (Oriente - Occidente)",
+    "horario_critico": "06:45-08:00 y 16:45-17:45",
+    "descripcion": "Hueco / tapa de alcantarilla deteriorada que reduce el paso a un carril y genera congestión al esquivar.",
+    "foto": "datos/fotos/inc-01.jpg",
+    "verificado": "2026-11-26"
+  },
+  {
+    "id": "INC-02",
+    "origen": "campo",
+    "tipo": "malla_vial",
+    "severidad": "amarilla",
+    "lat": 11.224742,
+    "lng": -74.191053,
+    "via": "Calle 29H – Camino de Venida (INC-02)",
+    "sentido_afectado": "Venida hacia Av. Ferrocarril",
+    "horario_critico": "06:45-08:00 y 11:45-13:00",
+    "descripcion": "Vía en estado de descomposición con pérdida severa de la capa asfáltica.",
+    "foto": "datos/fotos/inc-02.jpg",
+    "verificado": "2026-11-26"
+  },
+  {
+    "id": "INC-03",
+    "origen": "campo",
+    "tipo": "un_carril",
+    "severidad": "naranja",
+    "lat": 11.224318,
+    "lng": -74.191462,
+    "via": "Calle 29H – Camino de Ida (INC-03)",
+    "sentido_afectado": "Ida hacia Universidad del Magdalena (Doble sentido)",
+    "horario_critico": "06:45-08:00 y 16:45-17:45",
+    "descripcion": "Carril derecho levantado por obstrucción de raíces de árboles, restringiendo el paso a un solo carril.",
+    "foto": "datos/fotos/inc-03.jpg",
+    "verificado": "2026-11-26"
+  },
+  {
+    "id": "INC-04",
+    "origen": "campo",
+    "tipo": "malla_vial",
+    "severidad": "amarilla",
+    "lat": 11.224861,
+    "lng": -74.190732,
+    "via": "Calle 29H – Camino de Ida (INC-04)",
+    "sentido_afectado": "Ida hacia Universidad del Magdalena",
+    "horario_critico": "Todo el día",
+    "descripcion": "Bache grave sobre la calzada que representa deterioro severo de la malla vial.",
+    "foto": "datos/fotos/inc-04.jpg",
+    "verificado": "2026-11-26"
+  }
+]

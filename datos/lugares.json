@@ -1,0 +1,52 @@
+[
+  {
+    "nombre": "INC-01: Hueco / tapa de alcantarilla (Venida)",
+    "lat": 11.225287,
+    "lng": -74.190323
+  },
+  {
+    "nombre": "INC-02: Vía en descomposición (Venida)",
+    "lat": 11.224742,
+    "lng": -74.191053
+  },
+  {
+    "nombre": "INC-03: Levantamiento de placas por árboles (Ida)",
+    "lat": 11.224318,
+    "lng": -74.191462
+  },
+  {
+    "nombre": "INC-04: Bache grave (Ida)",
+    "lat": 11.224861,
+    "lng": -74.190732
+  },
+  {
+    "nombre": "Inicio Calle 29H (Av. del Ferrocarril)",
+    "lat": 11.222958,
+    "lng": -74.193284
+  },
+  {
+    "nombre": "Entrada Universidad del Magdalena",
+    "lat": 11.226203,
+    "lng": -74.188588
+  },
+  {
+    "nombre": "Calle 29G (Desvío Norte Motos)",
+    "lat": 11.225682,
+    "lng": -74.193288
+  },
+  {
+    "nombre": "Calle 29F (Sector Norte)",
+    "lat": 11.226618,
+    "lng": -74.191502
+  },
+  {
+    "nombre": "Calle 29I (Paralela Sur Autos)",
+    "lat": 11.224912,
+    "lng": -74.19012
+  },
+  {
+    "nombre": "Carrera 21D (Conexión Sur)",
+    "lat": 11.224321,
+    "lng": -74.19101
+  }
+]

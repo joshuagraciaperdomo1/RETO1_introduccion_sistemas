@@ -1,0 +1,410 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "DES-01-MOTO",
+        "incidente": "INC-01",
+        "vehiculos": [
+          "moto"
+        ],
+        "tipo_ruta": "moto",
+        "opcional": false,
+        "nota": "Desvío para motocicletas saliendo hacia el costado norte (Calle 29G / Calle 29F / Cra. 21A) para evitar INC-01 e INC-02 rumbo a la Av. del Ferrocarril. No apto para transporte público ni carga pesada.",
+        "distancia_adicional_m": 846,
+        "verificado": "2026-11-27"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.1893858,
+            11.2260499
+          ],
+          [
+            -74.1894386,
+            11.2264538
+          ],
+          [
+            -74.1894805,
+            11.2267021
+          ],
+          [
+            -74.1895532,
+            11.2271567
+          ],
+          [
+            -74.189723,
+            11.2270685
+          ],
+          [
+            -74.1898565,
+            11.227087
+          ],
+          [
+            -74.1900884,
+            11.2272091
+          ],
+          [
+            -74.1904352,
+            11.2273769
+          ],
+          [
+            -74.1907762,
+            11.2271791
+          ],
+          [
+            -74.1910694,
+            11.2269499
+          ],
+          [
+            -74.1912711,
+            11.2268104
+          ],
+          [
+            -74.1915017,
+            11.2266182
+          ],
+          [
+            -74.1917359,
+            11.2265677
+          ],
+          [
+            -74.1921393,
+            11.2265061
+          ],
+          [
+            -74.1924325,
+            11.2264924
+          ],
+          [
+            -74.1926354,
+            11.2264413
+          ],
+          [
+            -74.1927601,
+            11.2263819
+          ],
+          [
+            -74.1928653,
+            11.2262441
+          ],
+          [
+            -74.1930899,
+            11.2258986
+          ],
+          [
+            -74.1932877,
+            11.2256823
+          ],
+          [
+            -74.1931565,
+            11.2254327
+          ],
+          [
+            -74.1930153,
+            11.2251967
+          ],
+          [
+            -74.1928781,
+            11.2249822
+          ],
+          [
+            -74.1927349,
+            11.2247521
+          ],
+          [
+            -74.1927051,
+            11.2247072
+          ],
+          [
+            -74.1925739,
+            11.2244868
+          ],
+          [
+            -74.1924168,
+            11.2242294
+          ],
+          [
+            -74.1922061,
+            11.2238784
+          ],
+          [
+            -74.19221,
+            11.2238803
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "DES-01-AUTO",
+        "incidente": "INC-01",
+        "vehiculos": [
+          "automovil"
+        ],
+        "tipo_ruta": "automovil",
+        "opcional": false,
+        "nota": "Desvío corto para automóviles particulares por la paralela sur (Calle 29I / Cra. 21D) esquivando el hueco de alcantarilla y reincorporándose a la Calle 29H. Vehículos pesados deben seguir por el tramo principal.",
+        "distancia_adicional_m": 310,
+        "verificado": "2026-11-27"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.1896658,
+            11.225828
+          ],
+          [
+            -74.1896125,
+            11.2257742
+          ],
+          [
+            -74.189597,
+            11.2257569
+          ],
+          [
+            -74.1895683,
+            11.2256594
+          ],
+          [
+            -74.1895065,
+            11.2253583
+          ],
+          [
+            -74.190169,
+            11.2250356
+          ],
+          [
+            -74.1901204,
+            11.2249121
+          ],
+          [
+            -74.1910103,
+            11.2243208
+          ],
+          [
+            -74.1912267,
+            11.2246197
+          ],
+          [
+            -74.1912245,
+            11.2246197
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "DES-03-MOTO",
+        "incidente": "INC-03",
+        "vehiculos": [
+          "moto"
+        ],
+        "tipo_ruta": "moto",
+        "opcional": false,
+        "nota": "Desvío verificado para motocicletas bordeando el costado norte de la Calle 29H para evitar el levantamiento de placas (calles internas angostas, no apto para transporte público ni carga pesada).",
+        "distancia_adicional_m": 1127,
+        "verificado": "2026-11-27"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.1927316,
+            11.2233288
+          ],
+          [
+            -74.192903,
+            11.2234868
+          ],
+          [
+            -74.1930719,
+            11.2237111
+          ],
+          [
+            -74.1933732,
+            11.2240831
+          ],
+          [
+            -74.1941061,
+            11.224992
+          ],
+          [
+            -74.1938218,
+            11.2252068
+          ],
+          [
+            -74.193289,
+            11.2256736
+          ],
+          [
+            -74.1930784,
+            11.2259153
+          ],
+          [
+            -74.1928067,
+            11.2263264
+          ],
+          [
+            -74.1927156,
+            11.2264104
+          ],
+          [
+            -74.1924486,
+            11.2264956
+          ],
+          [
+            -74.1921114,
+            11.2265075
+          ],
+          [
+            -74.1918046,
+            11.2265511
+          ],
+          [
+            -74.1915002,
+            11.2266215
+          ],
+          [
+            -74.1912973,
+            11.2267841
+          ],
+          [
+            -74.1910335,
+            11.2269838
+          ],
+          [
+            -74.1909131,
+            11.227066
+          ],
+          [
+            -74.1907496,
+            11.2271939
+          ],
+          [
+            -74.1904403,
+            11.2273827
+          ],
+          [
+            -74.190028,
+            11.2271804
+          ],
+          [
+            -74.1898524,
+            11.2270844
+          ],
+          [
+            -74.1897308,
+            11.2270645
+          ],
+          [
+            -74.1895579,
+            11.2271536
+          ],
+          [
+            -74.1894201,
+            11.2263186
+          ],
+          [
+            -74.1893653,
+            11.2259427
+          ],
+          [
+            -74.1891433,
+            11.2260621
+          ],
+          [
+            -74.1889153,
+            11.2261157
+          ],
+          [
+            -74.188599,
+            11.2261993
+          ],
+          [
+            -74.188377,
+            11.2266616
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "DES-04-LIVIANOS",
+        "incidente": "INC-04",
+        "vehiculos": [
+          "moto",
+          "automovil"
+        ],
+        "tipo_ruta": "livianos",
+        "opcional": true,
+        "nota": "Desvío NO obligatorio, pero recomendado para motos y automóviles: tomarlo evita que el vehículo sufra daños al pasar por el tramo con malla vial deteriorada. Transporte público y vehículos pesados deben seguir por el tramo principal debido a lo angosto de las calles en esta zona.",
+        "distancia_adicional_m": 185,
+        "verificado": "2026-11-27"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.1911722,
+            11.2245424
+          ],
+          [
+            -74.1910143,
+            11.2243213
+          ],
+          [
+            -74.1908595,
+            11.2244221
+          ],
+          [
+            -74.1907099,
+            11.2245224
+          ],
+          [
+            -74.1905631,
+            11.224619
+          ],
+          [
+            -74.19041,
+            11.2247204
+          ],
+          [
+            -74.1902485,
+            11.2248304
+          ],
+          [
+            -74.1901209,
+            11.2249144
+          ],
+          [
+            -74.1901437,
+            11.2249681
+          ],
+          [
+            -74.1901867,
+            11.2250525
+          ],
+          [
+            -74.1902308,
+            11.2251461
+          ],
+          [
+            -74.1902622,
+            11.2252181
+          ],
+          [
+            -74.190265,
+            11.2252167
+          ]
+        ]
+      }
+    }
+  ]
+}
