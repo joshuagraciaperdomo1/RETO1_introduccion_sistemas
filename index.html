@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radar de Desvíos - Calle 29H a Universidad del Magdalena</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body, html { height: 100%; width: 100%; background: #f4f6f8; color: #222; }
+
+    .contenedor-app { display: flex; height: 100vh; width: 100vw; }
+
+    .panel-lateral {
+      width: 380px;
+      background: #ffffff;
+      border-right: 1px solid #ddd;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    header h1 { font-size: 1.3rem; color: #0b3c5d; }
+    .subtitulo { font-size: 0.84rem; color: #555; margin-bottom: 8px; }
+    .contador-caja { background: #eaf2f8; color: #0b3c5d; padding: 8px 12px; border-radius: 6px; font-size: 0.88rem; display: flex; justify-content: space-between; align-items: center; }
+    .bloque { border-top: 1px solid #eee; padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .fila-busqueda { display: flex; gap: 6px; }
+
+    /* Filtro rápido por severidad */
+    .filtros-sev { display: flex; gap: 5px; flex-wrap: wrap; }
+    .btn-sev {
+      flex: 1;
+      padding: 6px 8px;
+      font-size: 0.78rem;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #334155;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .btn-sev:hover { background: #e2e8f0; }
+    .btn-sev.activo { background: #0b3c5d; color: #fff; border-color: #0b3c5d; }
+    .btn-sev.activo.naranja { background: #ea580c; border-color: #ea580c; }
+    .btn-sev.activo.amarilla { background: #ca8a04; border-color: #ca8a04; }
+    .btn-sev.activo.roja { background: #dc2626; border-color: #dc2626; }
+
+    /* Badges en ficha de detalle */
+    .badges-fila { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.74rem; font-weight: 700; color: #fff; }
+    .badge.roja { background: #dc2626; }
+    .badge.naranja { background: #ea580c; }
+    .badge.amarilla { background: #ca8a04; }
+    .badge.sentido { background: #334155; }
+    .badge.ciudadano { background: #7c3aed; }
+
+    input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; font-size: 0.88rem; }
+    button, .btn-importar { padding: 8px 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.82rem; font-weight: 600; text-align: center; }
+    .btn-primario, #btn-buscar { background: #0b3c5d; color: #fff; }
+    .btn-secundario { background: #e2e8f0; color: #1e293b; }
+    .btn-alerta { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .btn-exito { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .botones-form, .acciones-datos { display: flex; gap: 6px; margin-top: 4px; }
+    .botones-form button, .acciones-datos button, .acciones-datos label { flex: 1; }
+    .oculto { display: none; }
+    .coordenadas-info { font-size: 0.8rem; color: #555; }
+    .foto-incidente { width: 100%; height: 145px; object-fit: cover; border-radius: 6px; margin-top: 6px; background: #eee; }
+    .aviso-desvio { background: #fff3cd; color: #856404; padding: 8px; border-radius: 5px; font-size: 0.83rem; margin-top: 6px; }
+    .info-desvio { background: #f0f9ff; border-left: 4px solid #2563eb; color: #1e3a8a; padding: 8px; border-radius: 4px; font-size: 0.82rem; margin-top: 6px; }
+    .info-desvio.moto { background: #ecfdf5; border-left-color: #16a34a; color: #14532d; }
+    .info-desvio.automovil { background: #eff6ff; border-left-color: #2563eb; color: #1e3a8a; }
+    .info-desvio.livianos { background: #eff6ff; border-left-color: #2563eb; color: #1e3a8a; }
+    .info-desvio.pesado { background: #f5f3ff; border-left-color: #7c3aed; color: #4c1d95; }
+
+    .contenedor-mapa { flex: 1; position: relative; height: 100%; min-height: 500px; }
+    #mapa { width: 100%; height: 100%; min-height: 500px; z-index: 1; }
+
+    /* Pines de referencia fijos */
+    .pin-ref {
+      background: #0b3c5d;
+      color: #ffffff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      white-space: nowrap;
+      width: max-content;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      transform: translate(-50%, -100%);
+    }
+    .pin-ref.uni { background: #0f766e; }
+
+    /* Botón flotante Centrar mapa */
+    .btn-centrar {
+      position: absolute;
+      top: 80px;
+      left: 10px;
+      z-index: 1000;
+      background: #ffffff;
+      color: #0b3c5d;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .btn-centrar:hover { background: #f1f5f9; }
+
+    .leyenda {
+      position: absolute; bottom: 20px; right: 20px; z-index: 1000;
+      background: rgba(255, 255, 255, 0.96); padding: 10px 14px; border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2); font-size: 0.78rem;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .leyenda hr { border: none; border-top: 1px solid #e5e7eb; margin: 4px 0; }
+    .punto { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+    .punto.roja { background: #dc2626; }
+    .punto.naranja { background: #ea580c; }
+    .punto.amarilla { background: #eab308; }
+    .linea { display: inline-block; width: 18px; height: 4px; margin-right: 6px; vertical-align: middle; border-radius: 2px; }
+    .linea.tramo { background: #334155; }
+    .linea.tramo-venida { background: #64748b; }
+    .linea.moto { background: #16a34a; }
+    .linea.auto { background: #2563eb; }
+
+    @media (max-width: 768px) {
+      .contenedor-app { flex-direction: column-reverse; }
+      .panel-lateral { width: 100%; height: 48vh; border-right: none; border-top: 1px solid #ddd; }
+      .contenedor-mapa, #mapa { height: 52vh; min-height: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="contenedor-app">
+    <aside class="panel-lateral">
+      <header>
+        <h1>Radar de Desvíos</h1>
+        <p class="subtitulo">Corredor Calle 29H / 29H3 (Av. Ferrocarril ↔ Universidad del Magdalena)</p>
+        <div class="contador-caja">
+          <span>Puntos visibles: <strong id="contador-incidentes">0</strong></span>
+          <span id="contador-ciudadanos" style="font-size:0.78rem; color:#475569;"></span>
+        </div>
+      </header>
+
+      <section class="bloque">
+        <label><strong>Filtrar por severidad:</strong></label>
+        <div class="filtros-sev" id="filtros-severidad">
+          <button type="button" class="btn-sev activo" data-sev="todas">Todos</button>
+          <button type="button" class="btn-sev roja" data-sev="roja">Rojo</button>
+          <button type="button" class="btn-sev naranja" data-sev="naranja">Naranja</button>
+          <button type="button" class="btn-sev amarilla" data-sev="amarilla">Amarillo</button>
+        </div>
+      </section>
+
+      <section class="bloque">
+        <label for="buscador-lugar"><strong>Buscar punto del tramo:</strong></label>
+        <div class="fila-busqueda">
+          <input type="text" id="buscador-lugar" list="lista-lugares" placeholder="Ej. INC-01, INC-03, Unimagdalena...">
+          <datalist id="lista-lugares"></datalist>
+          <button id="btn-buscar" type="button">Ir</button>
+        </div>
+      </section>
+
+      <section class="bloque">
+        <label for="filtro-vehiculo"><strong>Rutas según tipo de vehículo:</strong></label>
+        <select id="filtro-vehiculo">
+          <option value="todos">Comparar todas las rutas (Moto / Auto / Pesado)</option>
+          <option value="moto">Solo Motocicleta</option>
+          <option value="automovil">Solo Automóvil particular</option>
+          <option value="pesado">Solo Transporte público o carga</option>
+        </select>
+      </section>
+
+      <section id="panel-detalle" class="bloque">
+        <p>Haz clic en un marcador sobre la <strong>Calle 29H</strong> para ver el detalle del incidente y sus desvíos, o <strong>haz clic en el mapa</strong> para reportar uno nuevo.</p>
+      </section>
+
+      <section id="seccion-formulario" class="bloque oculto">
+        <h3>Nuevo reporte en Calle 29H</h3>
+        <form id="form-reporte">
+          <input type="hidden" id="rep-lat">
+          <input type="hidden" id="rep-lng">
+          <p class="coordenadas-info">Ubicación: <span id="texto-coords"></span></p>
+
+          <label for="rep-tipo">Tipo de afectación *</label>
+          <select id="rep-tipo" required>
+            <option value="">Seleccione...</option>
+            <option value="cierre_total">Cierre total u obra activa</option>
+            <option value="un_carril">Paso restringido a un carril / Congestión alta</option>
+            <option value="malla_vial">Deterioro severo de la malla vial</option>
+          </select>
+
+          <label for="rep-sentido">Sentido vial afectado *</label>
+          <input type="text" id="rep-sentido" required placeholder="Ej. Ida hacia Unimagdalena">
+
+          <label for="rep-severidad">Nivel de impacto *</label>
+          <select id="rep-severidad" required>
+            <option value="">Seleccione...</option>
+            <option value="roja">Rojo – Cierre total u obra activa</option>
+            <option value="naranja">Naranja – Paso restringido a un carril / congestión alta</option>
+            <option value="amarilla">Amarillo – Deterioro severo de la malla vial</option>
+          </select>
+
+          <label for="rep-descripcion">Descripción (máx. 200 caracteres) *</label>
+          <textarea id="rep-descripcion" maxlength="200" rows="3" required placeholder="Describe brevemente el problema..."></textarea>
+
+          <div class="botones-form">
+            <button type="submit" class="btn-primario">Guardar reporte</button>
+            <button type="button" id="btn-cancelar" class="btn-secundario">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="bloque">
+        <label><strong>Gestión de reportes ciudadanos:</strong></label>
+        <button id="btn-toggle-ciudadanos" type="button" class="btn-alerta">Limpiar reportes ciudadanos del mapa</button>
+        <div class="acciones-datos">
+          <button id="btn-exportar" type="button" class="btn-secundario">Exportar JSON</button>
+          <label class="btn-secundario btn-importar">
+            Importar JSON
+            <input type="file" id="input-importar" accept=".json" hidden>
+          </label>
+        </div>
+      </section>
+    </aside>
+
+    <main class="contenedor-mapa">
+      <div id="mapa"></div>
+      <button id="btn-centrar" class="btn-centrar" type="button" title="Volver a la vista general del corredor">Centrar mapa</button>
+      <div class="leyenda">
+        <strong>Severidad (Criterio oficial)</strong>
+        <div><span class="punto roja"></span> Cierre total u obra activa</div>
+        <div><span class="punto naranja"></span> Paso a un carril / congestión alta</div>
+        <div><span class="punto amarilla"></span> Deterioro severo de malla vial</div>
+        <hr>
+        <strong>Corredor y desvíos</strong>
+        <div><span class="linea tramo"></span> Calzada de Ida (634 m)</div>
+        <div><span class="linea tramo-venida"></span> Calzada de Venida (637 m)</div>
+        <div><span class="linea moto"></span> Desvío Motocicleta</div>
+        <div><span class="linea auto"></span> Desvío Automóvil / Livianos</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // =========================================================================
+    // CORREDOR PRINCIPAL (IDA Y VENIDA) + DESVÍOS VERIFICADOS EN GEOJSON.IO
+    // =========================================================================
+    const TRAMO_IDA = [[11.2229578, -74.1932843], [11.2230218, -74.1931577], [11.2239051, -74.1919817], [11.2244154, -74.1913391], [11.2250052, -74.1905361], [11.2251285, -74.1903744], [11.2257134, -74.1896503], [11.2259338, -74.1893782], [11.2260545, -74.1891653], [11.226203, -74.188588], [11.2262119, -74.1886115]];
+    const TRAMO_VENIDA = [[11.2263059, -74.18863], [11.226244, -74.1888236], [11.2261548, -74.1891317], [11.2261045, -74.189266], [11.2260347, -74.1893924], [11.2257674, -74.1897322], [11.2253084, -74.1902959], [11.2251671, -74.1904753], [11.2248844, -74.1908595], [11.22452, -74.1913559], [11.2243661, -74.191548], [11.2242499, -74.1916985], [11.2240771, -74.1919483], [11.2237911, -74.1923167], [11.2230462, -74.193259], [11.2229677, -74.1933166], [11.2229646, -74.1933198]];
+
+    const RESPALDO_INCIDENTES = [
+      {
+        id: "INC-01",
+        origen: "campo",
+        tipo: "un_carril",
+        severidad: "naranja",
+        lat: 11.225287,
+        lng: -74.190323,
+        via: "Calle 29H3 – Camino de Venida (INC-01)",
+        sentido_afectado: "Venida hacia Av. Ferrocarril (Oriente - Occidente)",
+        horario_critico: "06:45-08:00 y 16:45-17:45",
+        descripcion: "Hueco / tapa de alcantarilla deteriorada que reduce el paso a un carril y genera congestión al esquivar.",
+        foto: "datos/fotos/inc-01.jpg",
+        verificado: "2026-11-26"
+      },
+      {
+        id: "INC-02",
+        origen: "campo",
+        tipo: "malla_vial",
+        severidad: "amarilla",
+        lat: 11.224742,
+        lng: -74.191053,
+        via: "Calle 29H – Camino de Venida (INC-02)",
+        sentido_afectado: "Venida hacia Av. Ferrocarril",
+        horario_critico: "06:45-08:00 y 11:45-13:00",
+        descripcion: "Vía en estado de descomposición con pérdida severa de la capa asfáltica.",
+        foto: "datos/fotos/inc-02.jpg",
+        verificado: "2026-11-26"
+      },
+      {
+        id: "INC-03",
+        origen: "campo",
+        tipo: "un_carril",
+        severidad: "naranja",
+        lat: 11.224318,
+        lng: -74.191462,
+        via: "Calle 29H – Camino de Ida (INC-03)",
+        sentido_afectado: "Ida hacia Universidad del Magdalena (Doble sentido)",
+        horario_critico: "06:45-08:00 y 16:45-17:45",
+        descripcion: "Carril derecho levantado por obstrucción de raíces de árboles, restringiendo el paso a un solo carril.",
+        foto: "datos/fotos/inc-03.jpg",
+        verificado: "2026-11-26"
+      },
+      {
+        id: "INC-04",
+        origen: "campo",
+        tipo: "malla_vial",
+        severidad: "amarilla",
+        lat: 11.224861,
+        lng: -74.190732,
+        via: "Calle 29H – Camino de Ida (INC-04)",
+        sentido_afectado: "Ida hacia Universidad del Magdalena",
+        horario_critico: "Todo el día",
+        descripcion: "Bache grave sobre la calzada que representa deterioro severo de la malla vial.",
+        foto: "datos/fotos/inc-04.jpg",
+        verificado: "2026-11-26"
+      }
+    ];
+
+    const RESPALDO_DESVIOS = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {
+            id: "DES-01-MOTO",
+            incidente: "INC-01",
+            vehiculos: ["moto"],
+            tipo_ruta: "moto",
+            opcional: false,
+            nota: "Desvío para motocicletas saliendo hacia el costado norte (Calle 29G / Calle 29F / Cra. 21A) para evitar INC-01 e INC-02 rumbo a la Av. del Ferrocarril. No apto para transporte público ni carga pesada.",
+            distancia_adicional_m: 846,
+            verificado: "2026-11-27"
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: [[-74.1893858, 11.2260499], [-74.1894386, 11.2264538], [-74.1894805, 11.2267021], [-74.1895532, 11.2271567], [-74.189723, 11.2270685], [-74.1898565, 11.227087], [-74.1900884, 11.2272091], [-74.1904352, 11.2273769], [-74.1907762, 11.2271791], [-74.1910694, 11.2269499], [-74.1912711, 11.2268104], [-74.1915017, 11.2266182], [-74.1917359, 11.2265677], [-74.1921393, 11.2265061], [-74.1924325, 11.2264924], [-74.1926354, 11.2264413], [-74.1927601, 11.2263819], [-74.1928653, 11.2262441], [-74.1930899, 11.2258986], [-74.1932877, 11.2256823], [-74.1931565, 11.2254327], [-74.1930153, 11.2251967], [-74.1928781, 11.2249822], [-74.1927349, 11.2247521], [-74.1927051, 11.2247072], [-74.1925739, 11.2244868], [-74.1924168, 11.2242294], [-74.1922061, 11.2238784], [-74.19221, 11.2238803]]
+          }
+        },
+        {
+          type: "Feature",
+          properties: {
+            id: "DES-01-AUTO",
+            incidente: "INC-01",
+            vehiculos: ["automovil"],
+            tipo_ruta: "automovil",
+            opcional: false,
+            nota: "Desvío corto para automóviles particulares por la paralela sur (Calle 29I / Cra. 21D) esquivando el hueco de alcantarilla y reincorporándose a la Calle 29H. Vehículos pesados deben seguir por el tramo principal.",
+            distancia_adicional_m: 310,
+            verificado: "2026-11-27"
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: [[-74.1896658, 11.225828], [-74.1896125, 11.2257742], [-74.189597, 11.2257569], [-74.1895683, 11.2256594], [-74.1895065, 11.2253583], [-74.190169, 11.2250356], [-74.1901204, 11.2249121], [-74.1910103, 11.2243208], [-74.1912267, 11.2246197], [-74.1912245, 11.2246197]]
+          }
+        },
+        {
+          type: "Feature",
+          properties: {
+            id: "DES-03-MOTO",
+            incidente: "INC-03",
+            vehiculos: ["moto"],
+            tipo_ruta: "moto",
+            opcional: false,
+            nota: "Desvío verificado para motocicletas bordeando el costado norte de la Calle 29H para evitar el levantamiento de placas (calles internas angostas, no apto para transporte público ni carga pesada).",
+            distancia_adicional_m: 1127,
+            verificado: "2026-11-27"
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: [[-74.1927316, 11.2233288], [-74.192903, 11.2234868], [-74.1930719, 11.2237111], [-74.1933732, 11.2240831], [-74.1941061, 11.224992], [-74.1938218, 11.2252068], [-74.193289, 11.2256736], [-74.1930784, 11.2259153], [-74.1928067, 11.2263264], [-74.1927156, 11.2264104], [-74.1924486, 11.2264956], [-74.1921114, 11.2265075], [-74.1918046, 11.2265511], [-74.1915002, 11.2266215], [-74.1912973, 11.2267841], [-74.1910335, 11.2269838], [-74.1909131, 11.227066], [-74.1907496, 11.2271939], [-74.1904403, 11.2273827], [-74.190028, 11.2271804], [-74.1898524, 11.2270844], [-74.1897308, 11.2270645], [-74.1895579, 11.2271536], [-74.1894201, 11.2263186], [-74.1893653, 11.2259427], [-74.1891433, 11.2260621], [-74.1889153, 11.2261157], [-74.188599, 11.2261993], [-74.188377, 11.2266616]]
+          }
+        },
+        {
+          type: "Feature",
+          properties: {
+            id: "DES-04-LIVIANOS",
+            incidente: "INC-04",
+            vehiculos: ["moto", "automovil"],
+            tipo_ruta: "livianos",
+            opcional: true,
+            nota: "Desvío NO obligatorio, pero recomendado para motos y automóviles: tomarlo evita que el vehículo sufra daños al pasar por el tramo con malla vial deteriorada. Transporte público y vehículos pesados deben seguir por el tramo principal debido a lo angosto de las calles en esta zona.",
+            distancia_adicional_m: 185,
+            verificado: "2026-11-27"
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: [[-74.1911722, 11.2245424], [-74.1910143, 11.2243213], [-74.1908595, 11.2244221], [-74.1907099, 11.2245224], [-74.1905631, 11.224619], [-74.19041, 11.2247204], [-74.1902485, 11.2248304], [-74.1901209, 11.2249144], [-74.1901437, 11.2249681], [-74.1901867, 11.2250525], [-74.1902308, 11.2251461], [-74.1902622, 11.2252181], [-74.190265, 11.2252167]]
+          }
+        }
+      ]
+    };
+
+    const RESPALDO_LUGARES = [
+      {
+            "nombre": "INC-01: Hueco / tapa de alcantarilla (Venida)",
+            "lat": 11.225287,
+            "lng": -74.190323
+      },
+      {
+            "nombre": "INC-02: Vía en descomposición (Venida)",
+            "lat": 11.224742,
+            "lng": -74.191053
+      },
+      {
+            "nombre": "INC-03: Levantamiento de placas por árboles (Ida)",
+            "lat": 11.224318,
+            "lng": -74.191462
+      },
+      {
+            "nombre": "INC-04: Bache grave (Ida)",
+            "lat": 11.224861,
+            "lng": -74.190732
+      },
+      {
+            "nombre": "Inicio Calle 29H (Av. del Ferrocarril)",
+            "lat": 11.222958,
+            "lng": -74.193284
+      },
+      {
+            "nombre": "Entrada Universidad del Magdalena",
+            "lat": 11.226203,
+            "lng": -74.188588
+      },
+      {
+            "nombre": "Calle 29G (Desvío Norte Motos)",
+            "lat": 11.225682,
+            "lng": -74.193288
+      },
+      {
+            "nombre": "Calle 29F (Sector Norte)",
+            "lat": 11.226618,
+            "lng": -74.191502
+      },
+      {
+            "nombre": "Calle 29I (Paralela Sur Autos)",
+            "lat": 11.224912,
+            "lng": -74.19012
+      },
+      {
+            "nombre": "Carrera 21D (Conexión Sur)",
+            "lat": 11.224321,
+            "lng": -74.19101
+      }
+];
+
+    // =========================================================================
+    // LÓGICA DE LA APLICACIÓN
+    // =========================================================================
+    const CLAVE_STORAGE = 'radar_desvios_calle29h_v9';
+    const LIMITES_TRAMO = { latMin: 11.2205, latMax: 11.2295, lngMin: -74.1975, lngMax: -74.1845 };
+    const CENTRO_INICIAL = [11.2250, -74.1912];
+    const ZOOM_INICIAL = 16;
+
+    const COLORES_SEV = { roja: '#dc2626', naranja: '#ea580c', amarilla: '#eab308' };
+    const ETIQUETAS_SEV = { roja: 'Rojo – Cierre / Obra', naranja: 'Naranja – Paso restringido', amarilla: 'Amarillo – Malla vial' };
+    const COLORES_RUTA = { moto: '#16a34a', automovil: '#2563eb', livianos: '#2563eb', pesado: '#7c3aed' };
+    const NOMBRES_TIPO = {
+      cierre_total: 'Cierre total u obra activa',
+      un_carril: 'Paso restringido a un carril / Congestión alta',
+      malla_vial: 'Deterioro severo de la malla vial'
+    };
+
+    let mapa, capaMarcadores, capaDesvios;
+    let incidentesPrecargados = [];
+    let reportesCiudadanos = [];
+    let mostrarCiudadanos = true;
+    let filtroSeveridad = 'todas';
+    let coleccionDesvios = null;
+    let lugaresSector = [];
+    let incidenteSeleccionado = null;
+
+    async function cargarJSONSeguro(ruta, respaldo) {
+      try {
+        const res = await fetch(ruta);
+        if (!res.ok) throw new Error();
+        return await res.json();
+      } catch {
+        return respaldo;
+      }
+    }
+
+    async function iniciarAplicacion() {
+      const bounds = L.latLngBounds(
+        [LIMITES_TRAMO.latMin, LIMITES_TRAMO.lngMin],
+        [LIMITES_TRAMO.latMax, LIMITES_TRAMO.lngMax]
+      );
+
+      mapa = L.map('mapa', {
+        center: CENTRO_INICIAL,
+        zoom: ZOOM_INICIAL,
+        minZoom: 15,
+        maxZoom: 19,
+        maxBounds: bounds,
+        maxBoundsViscosity: 0.9
+      });
+
+      const capaCalles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(mapa);
+
+      const capaSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 19
+      });
+
+      L.control.layers({ 'Mapa de Calles': capaCalles, 'Satélite': capaSatelite }).addTo(mapa);
+
+      // Líneas del corredor principal
+      L.polyline(TRAMO_IDA, {
+        color: '#334155',
+        weight: 5,
+        opacity: 0.9
+      }).addTo(mapa).bindTooltip('Calzada de Ida: Av. Ferrocarril → Unimagdalena (634 m)');
+
+      L.polyline(TRAMO_VENIDA, {
+        color: '#64748b',
+        weight: 5,
+        opacity: 0.9
+      }).addTo(mapa).bindTooltip('Calzada de Venida: Unimagdalena → Av. Ferrocarril (637 m)');
+
+      // Pines de referencia fijos
+      const iconoFerrocarril = L.divIcon({
+        className: '',
+        html: '<div class="pin-ref">📍 Av. del Ferrocarril</div>',
+        iconSize: [0, 0]
+      });
+      L.marker([11.222958, -74.193284], { icon: iconoFerrocarril, interactive: false }).addTo(mapa);
+
+      const iconoUnimag = L.divIcon({
+        className: '',
+        html: '<div class="pin-ref uni">🎓 Universidad del Magdalena</div>',
+        iconSize: [0, 0]
+      });
+      L.marker([11.226250, -74.188588], { icon: iconoUnimag, interactive: false }).addTo(mapa);
+
+      capaMarcadores = L.layerGroup().addTo(mapa);
+      capaDesvios = L.layerGroup().addTo(mapa);
+
+      incidentesPrecargados = await cargarJSONSeguro('datos/incidentes.json', RESPALDO_INCIDENTES);
+      coleccionDesvios = await cargarJSONSeguro('datos/desvios.geojson', RESPALDO_DESVIOS);
+      lugaresSector = await cargarJSONSeguro('datos/lugares.json', RESPALDO_LUGARES);
+
+      const guardados = localStorage.getItem(CLAVE_STORAGE);
+      reportesCiudadanos = guardados ? JSON.parse(guardados) : [];
+
+      const datalist = document.getElementById('lista-lugares');
+      lugaresSector.forEach(l => {
+        const op = document.createElement('option');
+        op.value = l.nombre;
+        datalist.appendChild(op);
+      });
+
+      dibujarMarcadores();
+      actualizarBotonCiudadanos();
+      configurarEventos();
+
+      // Abrir por defecto en INC-01 para ver los nuevos desvíos de moto y auto
+      const incInicial = incidentesPrecargados.find(i => i.id === 'INC-01') || incidentesPrecargados[0];
+      if (incInicial) {
+        seleccionarIncidente(incInicial);
+      }
+
+      setTimeout(() => mapa.invalidateSize(), 200);
+    }
+
+    function estaDentroDelTramo(lat, lng) {
+      return (
+        lat >= LIMITES_TRAMO.latMin &&
+        lat <= LIMITES_TRAMO.latMax &&
+        lng >= LIMITES_TRAMO.lngMin &&
+        lng <= LIMITES_TRAMO.lngMax
+      );
+    }
+
+    function obtenerDesviosParaIncidente(idIncidente, filtroVehiculo) {
+      if (!coleccionDesvios || !coleccionDesvios.features) return [];
+      return coleccionDesvios.features.filter(f => {
+        if (f.properties.incidente !== idIncidente) return false;
+        if (filtroVehiculo === 'todos') return true;
+        return Array.isArray(f.properties.vehiculos) && f.properties.vehiculos.includes(filtroVehiculo);
+      });
+    }
+
+    function actualizarBotonCiudadanos() {
+      const btn = document.getElementById('btn-toggle-ciudadanos');
+      const lbl = document.getElementById('contador-ciudadanos');
+      const totalCiu = reportesCiudadanos.length;
+
+      lbl.textContent = totalCiu > 0
+        ? (mostrarCiudadanos ? `(${totalCiu} ciudadanos)` : `(${totalCiu} ocultos)`)
+        : '(0 ciudadanos)';
+
+      if (mostrarCiudadanos) {
+        btn.textContent = totalCiu > 0
+          ? `Limpiar reportes ciudadanos (${totalCiu})`
+          : 'Limpiar reportes ciudadanos del mapa';
+        btn.className = 'btn-alerta';
+      } else {
+        btn.textContent = `Mostrar reportes ciudadanos nuevamente (${totalCiu})`;
+        btn.className = 'btn-exito';
+      }
+    }
+
+    function dibujarMarcadores() {
+      capaMarcadores.clearLayers();
+      const base = mostrarCiudadanos
+        ? [...incidentesPrecargados, ...reportesCiudadanos]
+        : [...incidentesPrecargados];
+
+      const filtrados = filtroSeveridad === 'todas'
+        ? base
+        : base.filter(inc => inc.severidad === filtroSeveridad);
+
+      document.getElementById('contador-incidentes').textContent = filtrados.length;
+
+      filtrados.forEach(inc => {
+        const marcador = L.circleMarker([inc.lat, inc.lng], {
+          radius: 9,
+          fillColor: COLORES_SEV[inc.severidad] || '#555',
+          color: '#ffffff',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.95
+        }).addTo(capaMarcadores);
+
+        marcador.bindTooltip(inc.id);
+
+        marcador.on('click', e => {
+          L.DomEvent.stopPropagation(e);
+          seleccionarIncidente(inc);
+        });
+      });
+    }
+
+    function seleccionarIncidente(inc) {
+      incidenteSeleccionado = inc;
+      document.getElementById('seccion-formulario').classList.add('oculto');
+      capaDesvios.clearLayers();
+
+      const filtro = document.getElementById('filtro-vehiculo').value;
+      let bloqueDesviosHTML = '';
+
+      if (inc.origen === 'ciudadano') {
+        bloqueDesviosHTML = `<div class="aviso-desvio"><strong>Desvío sin verificar:</strong> reporte ciudadano pendiente de comprobación en campo.</div>`;
+      } else {
+        const desvios = obtenerDesviosParaIncidente(inc.id, filtro);
+
+        if (desvios.length > 0) {
+          desvios.forEach(feat => {
+            const p = feat.properties;
+            const tipoColor = p.tipo_ruta || p.vehiculos[0] || 'automovil';
+            const colorLinea = COLORES_RUTA[tipoColor] || '#2563eb';
+            const etiquetaOpcional = p.opcional ? ' (Opcional / Recomendado)' : '';
+
+            L.geoJSON(feat, {
+              style: { color: colorLinea, weight: 5, dashArray: '8, 6', opacity: 0.92 }
+            }).addTo(capaDesvios).bindTooltip(`Ruta ${p.vehiculos.join(' / ')}${etiquetaOpcional}: ${p.distancia_adicional_m} m`);
+
+            bloqueDesviosHTML += `
+              <div class="info-desvio ${tipoColor}">
+                <strong>Vehículos (${p.vehiculos.join(', ')})${etiquetaOpcional}:</strong> ${p.distancia_adicional_m} m de recorrido<br>
+                ${p.nota || 'Desvío verificado en campo.'}<br>
+                <small>Verificado: ${p.verificado}</small>
+              </div>`;
+          });
+        } else if (filtro === 'pesado') {
+          bloqueDesviosHTML = `<div class="aviso-desvio"><strong>Seguir por el tramo principal (Transporte público / carga):</strong> las calles aledañas por esta zona son muy angostas y presentan malla vial deteriorada, por lo que no se recomienda desviar vehículos pesados.</div>`;
+        } else if (inc.severidad === 'amarilla') {
+          bloqueDesviosHTML = `<div class="aviso-desvio"><strong>Punto de precaución (Amarillo):</strong> deterioro severo de la malla vial; reducir velocidad, no requiere desvío obligatorio.</div>`;
+        } else {
+          bloqueDesviosHTML = `<div class="aviso-desvio"><strong>Desvío pendiente para ${filtro}:</strong> aún no se ha cargado el trazado en geojson.io para este tipo de vehículo en este punto.</div>`;
+        }
+      }
+
+      const fotoHTML = inc.foto
+        ? `<img src="${inc.foto}" alt="Foto del punto" class="foto-incidente" onerror="this.style.display='none'">`
+        : '';
+
+      const badgeOrigen = inc.origen === 'ciudadano'
+        ? '<span class="badge ciudadano">Reporte ciudadano</span>'
+        : '<span class="badge sentido">Verificado en campo</span>';
+
+      document.getElementById('panel-detalle').innerHTML = `
+        <div class="badges-fila">
+          <span class="badge ${inc.severidad}">${ETIQUETAS_SEV[inc.severidad] || inc.severidad}</span>
+          ${badgeOrigen}
+        </div>
+        <h3>${inc.via}</h3>
+        <p><strong>Tipo de afectación:</strong> ${NOMBRES_TIPO[inc.tipo] || inc.tipo}</p>
+        <p><strong>Sentido afectado:</strong> ${inc.sentido_afectado}</p>
+        <p><strong>Horario crítico:</strong> ${inc.horario_critico}</p>
+        <p><strong>Fecha de verificación:</strong> ${inc.verificado}</p>
+        <p>${inc.descripcion}</p>
+        ${fotoHTML}
+        ${bloqueDesviosHTML}
+      `;
+    }
+
+    function configurarEventos() {
+      // Filtro rápido por severidad
+      document.querySelectorAll('#filtros-severidad .btn-sev').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#filtros-severidad .btn-sev').forEach(b => b.classList.remove('activo'));
+          btn.classList.add('activo');
+          filtroSeveridad = btn.dataset.sev;
+          capaDesvios.clearLayers();
+          dibujarMarcadores();
+        });
+      });
+
+      // Botón Centrar mapa
+      document.getElementById('btn-centrar').addEventListener('click', () => {
+        mapa.setView(CENTRO_INICIAL, ZOOM_INICIAL);
+      });
+
+      // Botón Limpiar / Mostrar reportes ciudadanos
+      document.getElementById('btn-toggle-ciudadanos').addEventListener('click', () => {
+        if (reportesCiudadanos.length === 0) {
+          alert('No hay reportes ciudadanos guardados todavía. Haz clic en el mapa para crear uno.');
+          return;
+        }
+        mostrarCiudadanos = !mostrarCiudadanos;
+        if (!mostrarCiudadanos && incidenteSeleccionado && incidenteSeleccionado.origen === 'ciudadano') {
+          capaDesvios.clearLayers();
+          document.getElementById('panel-detalle').innerHTML = '<p>Reportes ciudadanos ocultos. Haz clic en un punto crítico o vuelve a mostrarlos.</p>';
+        }
+        dibujarMarcadores();
+        actualizarBotonCiudadanos();
+      });
+
+      document.getElementById('btn-buscar').addEventListener('click', () => {
+        const texto = document.getElementById('buscador-lugar').value.trim().toLowerCase();
+        const encontrado = lugaresSector.find(l => l.nombre.toLowerCase() === texto);
+        if (encontrado) mapa.setView([encontrado.lat, encontrado.lng], 18);
+        else alert('Selecciona un lugar válido de la lista del tramo.');
+      });
+
+      document.getElementById('filtro-vehiculo').addEventListener('change', () => {
+        if (incidenteSeleccionado) seleccionarIncidente(incidenteSeleccionado);
+      });
+
+      mapa.on('click', e => {
+        const { lat, lng } = e.latlng;
+        if (!estaDentroDelTramo(lat, lng)) {
+          alert('Haz clic dentro del tramo Calle 29H – Universidad del Magdalena.');
+          return;
+        }
+        document.getElementById('rep-lat').value = lat;
+        document.getElementById('rep-lng').value = lng;
+        document.getElementById('texto-coords').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        document.getElementById('seccion-formulario').classList.remove('oculto');
+      });
+
+      document.getElementById('form-reporte').addEventListener('submit', e => {
+        e.preventDefault();
+        const nuevo = {
+          id: 'CIU-' + Date.now(),
+          origen: 'ciudadano',
+          tipo: document.getElementById('rep-tipo').value,
+          severidad: document.getElementById('rep-severidad').value,
+          lat: Number(parseFloat(document.getElementById('rep-lat').value).toFixed(6)),
+          lng: Number(parseFloat(document.getElementById('rep-lng').value).toFixed(6)),
+          via: 'Reporte ciudadano en Calle 29H',
+          sentido_afectado: document.getElementById('rep-sentido').value.trim(),
+          horario_critico: 'Reportado en vivo',
+          descripcion: document.getElementById('rep-descripcion').value.trim(),
+          foto: null,
+          verificado: new Date().toISOString().split('T')[0]
+        };
+        reportesCiudadanos.push(nuevo);
+        mostrarCiudadanos = true;
+        localStorage.setItem(CLAVE_STORAGE, JSON.stringify(reportesCiudadanos));
+        e.target.reset();
+        document.getElementById('seccion-formulario').classList.add('oculto');
+        dibujarMarcadores();
+        actualizarBotonCiudadanos();
+        seleccionarIncidente(nuevo);
+      });
+
+      document.getElementById('btn-cancelar').addEventListener('click', () => {
+        document.getElementById('seccion-formulario').classList.add('oculto');
+      });
+
+      document.getElementById('btn-exportar').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(reportesCiudadanos, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'reportes-calle-29h.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      document.getElementById('input-importar').addEventListener('change', e => {
+        if (!e.target.files.length) return;
+        const lector = new FileReader();
+        lector.onload = ev => {
+          try {
+            const importados = JSON.parse(ev.target.result);
+            const ids = new Set(reportesCiudadanos.map(r => r.id));
+            let agregados = 0;
+            importados.forEach(rep => {
+              if (rep.id && !ids.has(rep.id)) {
+                reportesCiudadanos.push(rep);
+                ids.add(rep.id);
+                agregados++;
+              }
+            });
+            mostrarCiudadanos = true;
+            localStorage.setItem(CLAVE_STORAGE, JSON.stringify(reportesCiudadanos));
+            dibujarMarcadores();
+            actualizarBotonCiudadanos();
+            alert(`Se importaron ${agregados} reportes nuevos sin duplicados.`);
+            e.target.value = '';
+          } catch {
+            alert('Archivo JSON inválido.');
+          }
+        };
+        lector.readAsText(e.target.files[0]);
+      });
+    }
+
+    iniciarAplicacion();
+  </script>
+</body>
+</html>
